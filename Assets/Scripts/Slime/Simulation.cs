@@ -33,10 +33,10 @@ public class Simulation : MonoBehaviour
     [SerializeField] protected Texture2D maskTexture;
 
     protected virtual void Start()
-	{
-		Init();
-		transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
-	}
+        {
+                Init();
+                transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
+        }
 	
 
 	void Init()
@@ -173,11 +173,26 @@ public class Simulation : MonoBehaviour
 		ComputeHelper.CopyRenderTexture(diffusedTrailMap, trailMap);
 	}
 
-	void OnDestroy()
-	{
+        void OnDestroy()
+        {
+                ReleaseResources();
+        }
 
-		ComputeHelper.Release(agentBuffer, settingsBuffer);
-	}
+        public void ResetSimulation()
+        {
+                ReleaseResources();
+                Init();
+                transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
+        }
+
+        void ReleaseResources()
+        {
+                ComputeHelper.Release(agentBuffer, settingsBuffer);
+                if (trailMap != null) trailMap.Release();
+                if (diffusedTrailMap != null) diffusedTrailMap.Release();
+                if (displayTexture != null) displayTexture.Release();
+                if (maskRenderTexture != null) maskRenderTexture.Release();
+        }
 
 	public struct Agent
 	{
