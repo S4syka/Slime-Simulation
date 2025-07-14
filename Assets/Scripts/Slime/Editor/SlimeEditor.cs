@@ -35,7 +35,9 @@ public class SlimeEditor : Editor
 		}
 	}
 
-	private void OnEnable () {
-		settingsFoldout = EditorPrefs.GetBool (nameof (settingsFoldout), false);
-	}
+        private void OnEnable () {
+                settingsFoldout = EditorPrefs.GetBool (nameof (settingsFoldout), false);
+        }
+
 }
+
