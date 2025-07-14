@@ -15,15 +15,15 @@ MonoBehaviour:
   stepsPerFrame: 2
   width: 2560
   height: 1440
-  numAgents: 250000
-  spawnMode: 3
+  numAgents: 90910
+  spawnMode: 0
   trailWeight: 5
   decayRate: 0.2
   diffuseRate: 3
   speciesSettings:
   - moveSpeed: 20
-    turnSpeed: 2
+    turnSpeed: 15
     sensorAngleSpacing: 30
     sensorOffsetDst: 35
-    sensorSize: 1
+    sensorSize: 2
     colour: {r: 1, g: 1, b: 1, a: 0}
