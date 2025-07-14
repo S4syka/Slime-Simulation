@@ -64,7 +64,6 @@ public class Simulation : MonoBehaviour
         compute.SetTexture(colourKernel, "ColourMap", displayTexture);
 		compute.SetTexture(colourKernel, "TrailMap", trailMap);
 
-
         // Create agents with initial positions and angles
         Agent[] agents = new Agent[settings.numAgents];
 		for (int i = 0; i < agents.Length; i++)

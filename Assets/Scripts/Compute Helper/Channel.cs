@@ -6,7 +6,7 @@
 		Red,
 		Green,
 		Blue,
-		Alpha,
+		Alpha, 
 		Zero
 	}
 }
