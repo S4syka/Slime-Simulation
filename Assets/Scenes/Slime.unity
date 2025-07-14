@@ -237,13 +237,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   compute: {fileID: 7200000, guid: a0aea66b8c503e748bb334583d5db67c, type: 3}
   drawAgentsCS: {fileID: 7200000, guid: 9d6969cce8474ed4899115f5d816b0a5, type: 3}
-  settings: {fileID: 11400000, guid: 87cfdbad3f2699649b250f4531fd4d7e, type: 2}
+  settings: {fileID: 11400000, guid: 0367b3dddb285494bbb8c9e43002e188, type: 2}
   showAgentsOnly: 0
   filterMode: 1
   format: 48
   trailMap: {fileID: 0}
   diffusedTrailMap: {fileID: 0}
   displayTexture: {fileID: 0}
+  maskRenderTexture: {fileID: 0}
+  maskTexture: {fileID: 2800000, guid: f1ac625f7382c1f4a845f9416e949fd6, type: 3}
 --- !u!4 &1531495863
 Transform:
   m_ObjectHideFlags: 0

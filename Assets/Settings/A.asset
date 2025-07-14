@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: A
   m_EditorClassIdentifier: 
   stepsPerFrame: 2
-  width: 1920
-  height: 1080
+  width: 2560
+  height: 1440
   numAgents: 250000
-  spawnMode: 2
+  spawnMode: 3
   trailWeight: 5
   decayRate: 0.2
   diffuseRate: 3

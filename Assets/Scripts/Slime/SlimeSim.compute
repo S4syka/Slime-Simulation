@@ -143,6 +143,7 @@ void Update (uint3 id : SV_DispatchThreadID)
 float decayRate;
 float diffuseRate;
 RWTexture2D<float4> DiffusedTrailMap;
+Texture2D<float4> BackgroundImage;
 
 [numthreads(8,8,1)]
 void Diffuse (uint3 id : SV_DispatchThreadID)
@@ -150,8 +151,8 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 	if (id.x < 0 || id.x >= (uint)width || id.y < 0 || id.y >= (uint)height) {
 		return;
 	}
-
-	float4 sum = 0;
+	
+        float4 sum = 0;
 	float4 originalCol = TrailMap[id.xy];
 	// 3x3 blur
 	for (int offsetX = -1; offsetX <= 1; offsetX ++) {
@@ -168,6 +169,7 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 
 	//DiffusedTrailMap[id.xy] = blurredCol * saturate(1 - decayRate * deltaTime);
 	DiffusedTrailMap[id.xy] = max(0, blurredCol - decayRate * deltaTime);
+    DiffusedTrailMap[id.xy] = max(DiffusedTrailMap[id.xy], BackgroundImage[id.xy]);
 }
 
 #pragma kernel UpdateColourMap

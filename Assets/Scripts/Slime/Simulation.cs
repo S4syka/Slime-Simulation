@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using ComputeShaderUtility;
+using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using ComputeShaderUtility;
+using UnityEngine.UI;
 
 public class Simulation : MonoBehaviour
 {
@@ -24,34 +25,48 @@ public class Simulation : MonoBehaviour
 	[SerializeField, HideInInspector] protected RenderTexture trailMap;
 	[SerializeField, HideInInspector] protected RenderTexture diffusedTrailMap;
 	[SerializeField, HideInInspector] protected RenderTexture displayTexture;
+    [SerializeField] protected RenderTexture maskRenderTexture;
 
-	ComputeBuffer agentBuffer;
+    ComputeBuffer agentBuffer;
 	ComputeBuffer settingsBuffer;
 	Texture2D colourMapTexture;
+    [SerializeField] protected Texture2D maskTexture;
 
-	protected virtual void Start()
+    protected virtual void Start()
 	{
 		Init();
 		transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
 	}
-
+	
 
 	void Init()
 	{
-		// Create render textures
-		ComputeHelper.CreateRenderTexture(ref trailMap, settings.width, settings.height, filterMode, format);
+        // 1) Create the mask RenderTexture
+        maskRenderTexture = new RenderTexture(settings.width, settings.height, /*depth=*/0, format);
+        maskRenderTexture.enableRandomWrite = false;         // read-only use-case
+        maskRenderTexture.filterMode = filterMode;
+        maskRenderTexture.wrapMode = TextureWrapMode.Clamp;
+
+        // 2) Copy your Texture2D into it
+        Graphics.Blit(maskTexture, maskRenderTexture);
+
+        // Create render textures
+        ComputeHelper.CreateRenderTexture(ref trailMap, settings.width, settings.height, filterMode, format);
 		ComputeHelper.CreateRenderTexture(ref diffusedTrailMap, settings.width, settings.height, filterMode, format);
 		ComputeHelper.CreateRenderTexture(ref displayTexture, settings.width, settings.height, filterMode, format);
+		ComputeHelper.CreateRenderTexture(ref maskRenderTexture, settings.width, settings.height, filterMode, format);
 
-		// Assign textures
-		compute.SetTexture(updateKernel, "TrailMap", trailMap);
+        // Assign textures
+        compute.SetTexture(updateKernel, "TrailMap", trailMap);
 		compute.SetTexture(diffuseMapKernel, "TrailMap", trailMap);
 		compute.SetTexture(diffuseMapKernel, "DiffusedTrailMap", diffusedTrailMap);
-		compute.SetTexture(colourKernel, "ColourMap", displayTexture);
+        compute.SetTexture(diffuseMapKernel, "BackgroundImage", maskRenderTexture);
+        compute.SetTexture(colourKernel, "ColourMap", displayTexture);
 		compute.SetTexture(colourKernel, "TrailMap", trailMap);
 
-		// Create agents with initial positions and angles
-		Agent[] agents = new Agent[settings.numAgents];
+
+        // Create agents with initial positions and angles
+        Agent[] agents = new Agent[settings.numAgents];
 		for (int i = 0; i < agents.Length; i++)
 		{
 			Vector2 centre = new Vector2(settings.width / 2, settings.height / 2);
