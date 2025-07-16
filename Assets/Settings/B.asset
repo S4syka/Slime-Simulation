@@ -15,7 +15,7 @@ MonoBehaviour:
   stepsPerFrame: 2
   width: 1920
   height: 1080
-  numAgents: 25000
+  numAgents: 250000
   spawnMode: 0
   trailWeight: 8
   decayRate: 0.5

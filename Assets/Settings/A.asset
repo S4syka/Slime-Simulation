@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: A
   m_EditorClassIdentifier: 
   stepsPerFrame: 2
-  width: 2560
-  height: 1440
-  numAgents: 90910
+  width: 1920
+  height: 1080
+  numAgents: 86365
   spawnMode: 0
-  trailWeight: 5
-  decayRate: 0.2
-  diffuseRate: 3
+  trailWeight: 15.454545
+  decayRate: 0.27272728
+  diffuseRate: 0.75
   speciesSettings:
-  - moveSpeed: 20
-    turnSpeed: 15
-    sensorAngleSpacing: 30
-    sensorOffsetDst: 35
-    sensorSize: 2
+  - moveSpeed: 27.799545
+    turnSpeed: 44
+    sensorAngleSpacing: 130.63637
+    sensorOffsetDst: 22.727272
+    sensorSize: 1
     colour: {r: 1, g: 1, b: 1, a: 0}

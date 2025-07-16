@@ -15,7 +15,7 @@ MonoBehaviour:
   stepsPerFrame: 1
   width: 2560
   height: 1440
-  numAgents: 1000000
+  numAgents: 300000
   spawnMode: 1
   trailWeight: 60.454544
   decayRate: 0.6681818
@@ -25,5 +25,5 @@ MonoBehaviour:
     turnSpeed: 8
     sensorAngleSpacing: 30.809998
     sensorOffsetDst: 50
-    sensorSize: 2
+    sensorSize: 1
     colour: {r: 0, g: 1, b: 0.31496096, a: 0}
