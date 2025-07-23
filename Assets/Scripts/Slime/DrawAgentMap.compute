@@ -5,7 +5,7 @@ struct Agent {
 	float angle;
 	float4 mask;
 	int speciesIndex;
-	
+    float4 colour;
 };
 
 RWStructuredBuffer<Agent> agents;

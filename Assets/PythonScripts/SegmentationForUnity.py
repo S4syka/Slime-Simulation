@@ -48,7 +48,7 @@ class FrameHumanAnalysis:
             distance_function,
             layer_count,
             human_mask,
-            include_outside=True
+            include_outside=False
         )
         
         return sub_level_outline
@@ -110,7 +110,7 @@ class FrameHumanAnalysis:
         # Generate a black and white image from the mask
         sub_level_sets_outline = (sub_level_sets_outline_mask * 255).astype(np.uint8)
         
-        return sub_level_sets_outline
+        return sub_level_sets_outline_mask
     
     def getimg_sub_level_sets(self, distance_function: np.ndarray, human_mask: np.ndarray, outline, layer_count: int, include_outside = False) -> np.ndarray:
         normed_level_set = cv2.normalize(distance_function, None, 0, layer_count, cv2.NORM_MINMAX).astype(np.uint8)  # type: ignore
@@ -200,11 +200,20 @@ def main():
         
         image_analysis = FrameHumanAnalysis(pil_img, model, (0, 0, 255), (0, 255, 0))
         
-        img = image_analysis.analyze_frame()
+        img = image_analysis.analyze_frame(20)
         
         # Encode the image as PNG and get the byte array
-        _, buffer = cv2.imencode('.png', img)
-        data = buffer.tobytes()
+        ys, xs = np.nonzero(img)                     # arrays of row/col indices
+        n = len(xs)
+
+        # pack: 4‑byte count, then n pairs of 2‑byte unsigned shorts (=> max dim 65k)
+        buf = struct.pack('<I', n)
+        for x, y in zip(xs, ys):
+            buf += struct.pack('<HH', x, y)
+
+        # write to stdout
+        sys.stdout.buffer.write(buf)
+        sys.stdout.buffer.flush()
         
         cnt += 1        
         # cv2.imshow("Me", img)
@@ -214,12 +223,7 @@ def main():
         # if cnt % 5 != 0:
         #     continue
         
-        
-        
-        # Write 4‑byte big-endian length prefix, then PNG bytes
-        sys.stdout.buffer.write(struct.pack(">I", len(data)))
-        sys.stdout.buffer.write(data)
-        sys.stdout.buffer.flush()
+        # print("img shape:", img.shape)
         
 
 if __name__ == "__main__":

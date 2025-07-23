@@ -1,3 +1,4 @@
+using Assets.Scripts.Slime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class SlimeSettings : ScriptableObject
 	public int width = 1280;
 	public int height = 720;
 	public int numAgents = 100;
-	public Simulation.SpawnMode spawnMode;
+	public SpawnMode spawnMode;
 
 	[Header("Trail Settings")]
 	public float trailWeight = 1;
