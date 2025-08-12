@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Threading;
 using UnityEngine;
 
@@ -15,6 +16,7 @@ namespace Assets.Scripts.Slime
         private Thread _readerThread;
         private bool _running = true;
         private Vector2Int[] _blackCoords;
+        byte[] _currentFrame;
 
         public PythonWrapper(string path, Simulation sim)
         {
@@ -26,6 +28,7 @@ namespace Assets.Scripts.Slime
         {
             // 1) Prepare a GPU-side RenderTexture for your compute shader
             _sim.compute.SetTexture(_sim.diffuseMapKernel, "BackgroundImage", maskRenderTexture);
+            _sim.compute.SetTexture(_sim.colourKernel, "BackgroundImage2", maskRenderTexture);
 
             // 2) Launch Python once
             var psi = new ProcessStartInfo
@@ -55,15 +58,16 @@ namespace Assets.Scripts.Slime
             {
                 while (_running)
                 {
-                    uint count = reader.ReadUInt32();
-                    var tempBlackCoords = new Vector2Int[count];
-                    for (int i = 0; i < count; i++)
-                    {
-                        ushort x = reader.ReadUInt16();
-                        ushort y = reader.ReadUInt16();
-                        tempBlackCoords[i] = new Vector2Int(x, y);
-                    }
-                    _blackCoords = tempBlackCoords;
+                    // Read 4-byte length prefix
+                    byte[] lenBytes = reader.ReadBytes(4);
+                    if (lenBytes.Length < 4) break;
+                    int frameLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lenBytes, 0));
+
+                    // Read exactly frameLen bytes
+                    byte[] pngBytes = reader.ReadBytes(frameLen);
+                    if (pngBytes.Length < frameLen) break;
+
+                    _currentFrame = pngBytes;
                 }
             }
             catch (Exception e)
@@ -78,20 +82,30 @@ namespace Assets.Scripts.Slime
             int h = 480;
             lock (_lck)
             {
-                if (_blackCoords != null)
-                {
-                    var tex = new Texture2D(w, h, TextureFormat.R8, false);
-                    var pixels = new Color32[w * h];
-                    foreach (var v in _blackCoords)
-                    {
-                        pixels[(h - v.y - 1) * w + v.x] = new Color32(255, 255, 255, 0);
-                    }
-                    tex.SetPixels32(pixels);
-                    tex.Apply();
+                //if (_blackCoords != null)
+                //{
+                //    var tex = new Texture2D(w, h, TextureFormat.R8, false);
+                //    var pixels = new Color32[w * h];
+                //    foreach (var v in _blackCoords)
+                //    {
+                //        pixels[(h - v.y - 1) * w + v.x] = new Color32(255, 255, 255, 0);
+                //    }
+                //    tex.SetPixels32(pixels);
+                //    tex.Apply();
 
-                    _blackCoords = null;
+                //    _blackCoords = null;
+
+                //    Graphics.Blit(tex, maskRenderTexture);
+                //}
+
+                if(_currentFrame != null)
+                {
+                    var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                    tex.LoadImage(_currentFrame);
 
                     Graphics.Blit(tex, maskRenderTexture);
+
+                    _currentFrame = null;
                 }
             }
         }

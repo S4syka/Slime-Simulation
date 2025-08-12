@@ -119,7 +119,6 @@ void Update (uint3 id : SV_DispatchThreadID)
 	float2 direction = float2(cos(agent.angle), sin(agent.angle));
 	float2 newPos = agent.position + direction * deltaTime * settings.moveSpeed;
 
-	
 	// Clamp position to map boundaries, and pick new random move dir if hit boundary
 	if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= height) {
 		random = hash(random);
@@ -169,11 +168,12 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 
 	//DiffusedTrailMap[id.xy] = blurredCol * saturate(1 - decayRate * deltaTime);
 	DiffusedTrailMap[id.xy] = max(0, blurredCol - decayRate * deltaTime);
-    DiffusedTrailMap[id.xy] = max(DiffusedTrailMap[id.xy], BackgroundImage[id.xy]);
+    //DiffusedTrailMap[id.xy] = max(DiffusedTrailMap[id.xy], BackgroundImage[id.xy]);
 }
 
 #pragma kernel UpdateColourMap
 RWTexture2D<float4> ColourMap;
+Texture2D<float4> BackgroundImage2;
 [numthreads(8,8,1)]
 void UpdateColourMap (uint3 id : SV_DispatchThreadID)
 {
@@ -184,10 +184,17 @@ void UpdateColourMap (uint3 id : SV_DispatchThreadID)
 	float4 map = TrailMap[id.xy];
 
 	float4 colour = 0;
+	
+    // Assign random color to randColor
+    uint seed = id.x + id.y * width + (uint)time;
+    seed = hash(seed);
+    float4 randColor = float4(scaleToRange01(seed), scaleToRange01(hash(seed)), scaleToRange01(hash(hash(seed))), 1.0);
+	
 	for (uint i = 0; i < numSpecies; i ++) {
 		float4 mask = float4(i==0, i==1, i==2,i==3);
-		colour += speciesSettings[i].colour * dot(map, mask); 
-	}
+        colour += BackgroundImage2[id.xy] * dot(map, mask);
+    }
+	
 	ColourMap[id.xy] = colour;
 
 }

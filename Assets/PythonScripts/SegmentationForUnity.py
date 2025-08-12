@@ -113,9 +113,10 @@ class FrameHumanAnalysis:
         return sub_level_sets_outline_mask
     
     def getimg_sub_level_sets(self, distance_function: np.ndarray, human_mask: np.ndarray, outline, layer_count: int, include_outside = False) -> np.ndarray:
-        normed_level_set = cv2.normalize(distance_function, None, 0, layer_count, cv2.NORM_MINMAX).astype(np.uint8)  # type: ignore
-        normed_level_set = cv2.normalize(normed_level_set, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)  # type: ignore
-        
+        # normed_level_set = cv2.normalize(distance_function, None, 0, layer_count, cv2.NORM_MINMAX).astype(np.uint8)  # type: ignore
+        normed_level_set = cv2.normalize(distance_function, None, -255, 0, cv2.NORM_MINMAX).astype(np.int16)  # type: ignore
+        normed_level_set = -normed_level_set
+
         img = np.zeros_like(self.__orig_cv)
         img[..., 1] = normed_level_set  # Set the green channel to normed_level_set values
         
@@ -132,6 +133,19 @@ class FrameHumanAnalysis:
         
         return gradient
     
+    def get_human_coloured(self) -> np.ndarray:
+        human_mask = self.get_human()
+        human_coloured = np.zeros((*human_mask.shape, 3), dtype=np.uint8)
+        human_coloured[human_mask == 1] = self.__orig_cv[human_mask == 1]
+        return human_coloured
+    
+    def distance_function_colored(self) -> np.ndarray:
+        human_mask = self.get_human()
+        human_outline = self.get_human_outline(human_mask)
+        distance_function = self.get_distance_function(human_outline)
+        return self.getimg_sub_level_sets(distance_function, human_mask, human_outline, self.__layer_count, True)
+        
+
     def getimg_gradient_arrows(self,
                             gradient: np.ndarray,
                             base_image: np.ndarray,
@@ -194,36 +208,29 @@ def main():
             print("Can't receive frame (stream end?). Exiting ...")
             break
 
-            # Convert the frame (BGR from OpenCV) to RGB and then to PIL Image
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(frame_rgb)
         
-        image_analysis = FrameHumanAnalysis(pil_img, model, (0, 0, 255), (0, 255, 0))
+        image_analysis = FrameHumanAnalysis(pil_img, model, (0, 0, 255), (57, 255, 20))
         
-        img = image_analysis.analyze_frame(20)
+        img = image_analysis.distance_function_colored()
         
         # Encode the image as PNG and get the byte array
-        ys, xs = np.nonzero(img)                     # arrays of row/col indices
-        n = len(xs)
-
-        # pack: 4‑byte count, then n pairs of 2‑byte unsigned shorts (=> max dim 65k)
-        buf = struct.pack('<I', n)
-        for x, y in zip(xs, ys):
-            buf += struct.pack('<HH', x, y)
-
-        # write to stdout
-        sys.stdout.buffer.write(buf)
-        sys.stdout.buffer.flush()
+        _, buffer = cv2.imencode('.png', img)
+        data = buffer.tobytes()
         
         cnt += 1        
         # cv2.imshow("Me", img)
         # # Press 'q' to quit
         # if cv2.waitKey(1) == ord('q'):
         #     break 
-        # if cnt % 5 != 0:
-        #     continue
+        if cnt % 5 != 0:
+            continue
         
-        # print("img shape:", img.shape)
+        # Write 4‑byte big-endian length prefix, then PNG bytes
+        sys.stdout.buffer.write(struct.pack(">I", len(data)))
+        sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
         
 
 if __name__ == "__main__":
