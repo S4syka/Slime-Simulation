@@ -7,6 +7,14 @@ using UnityEngine;
 
 namespace Assets.Scripts.Slime
 {
+    public enum PythonProcessType
+    {
+        BackgroundImage = 0,
+        WeightedOutline = 1,
+        WeightedLevelSetOutline = 2,
+        WeightedLevelSetOutlineIntertior = 3
+    }
+
     public class PythonWrapper
     {
         private object _lck = new object();
@@ -18,9 +26,18 @@ namespace Assets.Scripts.Slime
         private Vector2Int[] _blackCoords;
         byte[] _currentFrame;
 
-        public PythonWrapper(string path, Simulation sim)
+        string BackGroundImagePath = "Assets/PythonScripts/PythonBackgroundImage.py";
+        string WeightedOutlinePath = "Assets/Scripts/Slime/PythonWeightedOutline.py";
+        string WeightedLevelSetOutlinePath = "Assets/Scripts/Slime/PythonWeightedLevelSetOutline.py";
+        string WeightedLevelSetOutlineInteriorPath = "Assets/Scripts/Slime/PythonWeightedLevelSetOutlineInterior.py";
+
+        public PythonWrapper(PythonProcessType processType, Simulation sim)
         {
-            _path = path;
+            if (processType == PythonProcessType.BackgroundImage)
+            {
+                _path = BackGroundImagePath;
+            }
+
             _sim = sim;
         }
 

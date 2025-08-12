@@ -60,7 +60,7 @@ public class Simulation : MonoBehaviour
 
             // 2) Copy your Texture2D into it
             Graphics.Blit(maskTexture, maskRenderTexture);
-            _pyWrap = new PythonWrapper(pythonScriptPath, this);
+            _pyWrap = new PythonWrapper(PythonProcessType.BackgroundImage, this);
             _pyWrap.InitProcess(maskRenderTexture);
             ComputeHelper.CreateRenderTexture(ref maskRenderTexture, settings.width, settings.height, filterMode, format);
         }
