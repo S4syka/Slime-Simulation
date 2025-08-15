@@ -33,12 +33,14 @@ public class Simulation : MonoBehaviour
     [SerializeField, HideInInspector] protected RenderTexture displayTexture;
     [SerializeField, HideInInspector] protected RenderTexture maskRenderTexture;
 
+    [SerializeField] PythonProcessType pythonProcessType = PythonProcessType.WeightedLevelSetOutline;
+
     ComputeBuffer agentBuffer;
     ComputeBuffer settingsBuffer;
     Texture2D colourMapTexture;
     [SerializeField] protected Texture2D maskTexture;
 
-    public string pythonScriptPath = "Assets/Scripts/Slime/python_script.py";
+    //public string pythonScriptPath = "Assets/Scripts/Slime/python_script.py";
     private PythonWrapper _pyWrap;
 
     protected virtual void Start()
@@ -46,7 +48,6 @@ public class Simulation : MonoBehaviour
         Init();
         transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
     }
-
 
     void Init()
     {
@@ -60,9 +61,9 @@ public class Simulation : MonoBehaviour
 
             // 2) Copy your Texture2D into it
             Graphics.Blit(maskTexture, maskRenderTexture);
-            _pyWrap = new PythonWrapper(PythonProcessType.BackgroundImage, this);
-            _pyWrap.InitProcess(maskRenderTexture);
             ComputeHelper.CreateRenderTexture(ref maskRenderTexture, settings.width, settings.height, filterMode, format);
+            _pyWrap = new PythonWrapper(pythonProcessType, this);
+            _pyWrap.InitProcess(maskRenderTexture);
         }
 
         // Create render textures
@@ -148,6 +149,8 @@ public class Simulation : MonoBehaviour
     public void ResetSimulation()
     {
         ReleaseResources();
+        _pyWrap.Stop();
+        _pyWrap = null;
         Init();
         transform.GetComponentInChildren<MeshRenderer>().material.mainTexture = displayTexture;
     }

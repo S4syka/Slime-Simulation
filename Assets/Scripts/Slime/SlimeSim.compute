@@ -142,7 +142,8 @@ void Update (uint3 id : SV_DispatchThreadID)
 float decayRate;
 float diffuseRate;
 RWTexture2D<float4> DiffusedTrailMap;
-Texture2D<float4> BackgroundImage;
+Texture2D<float4> BackGroundWeight;
+bool useBackgroundWeight;
 
 [numthreads(8,8,1)]
 void Diffuse (uint3 id : SV_DispatchThreadID)
@@ -168,12 +169,17 @@ void Diffuse (uint3 id : SV_DispatchThreadID)
 
 	//DiffusedTrailMap[id.xy] = blurredCol * saturate(1 - decayRate * deltaTime);
 	DiffusedTrailMap[id.xy] = max(0, blurredCol - decayRate * deltaTime);
-    //DiffusedTrailMap[id.xy] = max(DiffusedTrailMap[id.xy], BackgroundImage[id.xy]);
+	
+    if (useBackgroundWeight)
+    {
+		DiffusedTrailMap[id.xy] = max(DiffusedTrailMap[id.xy], BackGroundWeight[id.xy]);
+    }
 }
 
 #pragma kernel UpdateColourMap
 RWTexture2D<float4> ColourMap;
-Texture2D<float4> BackgroundImage2;
+Texture2D<float4> BackGroundImage;
+bool useBackGroundImage;
 [numthreads(8,8,1)]
 void UpdateColourMap (uint3 id : SV_DispatchThreadID)
 {
@@ -190,11 +196,18 @@ void UpdateColourMap (uint3 id : SV_DispatchThreadID)
     seed = hash(seed);
     float4 randColor = float4(scaleToRange01(seed), scaleToRange01(hash(seed)), scaleToRange01(hash(hash(seed))), 1.0);
 	
-	for (uint i = 0; i < numSpecies; i ++) {
-		float4 mask = float4(i==0, i==1, i==2,i==3);
-        colour += BackgroundImage2[id.xy] * dot(map, mask);
+    for (uint i = 0; i < numSpecies; i++)
+    {
+        float4 mask = float4(i == 0, i == 1, i == 2, i == 3);
+        if (useBackGroundImage)
+        {
+            colour += BackGroundImage[id.xy] * dot(map, mask);
+        }
+        else
+        {
+            colour += dot(map, mask) * speciesSettings[i].colour;
+        }
     }
 	
 	ColourMap[id.xy] = colour;
-
 }

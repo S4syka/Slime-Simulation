@@ -24,28 +24,56 @@ namespace Assets.Scripts.Slime
         private Thread _readerThread;
         private bool _running = true;
         private Vector2Int[] _blackCoords;
+        private PythonProcessType _processType;
         byte[] _currentFrame;
 
         string BackGroundImagePath = "Assets/PythonScripts/PythonBackgroundImage.py";
-        string WeightedOutlinePath = "Assets/Scripts/Slime/PythonWeightedOutline.py";
-        string WeightedLevelSetOutlinePath = "Assets/Scripts/Slime/PythonWeightedLevelSetOutline.py";
-        string WeightedLevelSetOutlineInteriorPath = "Assets/Scripts/Slime/PythonWeightedLevelSetOutlineInterior.py";
+        string WeightedOutlinePath = "Assets/PythonScripts/PythonWeightedOutline.py";
+        string WeightedLevelSetOutlinePath = "Assets/PythonScripts/PythonWeightedLevelSetOutline.py";
+        string WeightedLevelSetOutlineInteriorPath = "Assets/PythonScripts/PythonWeightedLevelSetOutlineInterior.py";
 
         public PythonWrapper(PythonProcessType processType, Simulation sim)
         {
-            if (processType == PythonProcessType.BackgroundImage)
-            {
-                _path = BackGroundImagePath;
-            }
-
+            _processType = processType;
             _sim = sim;
+
+            switch (processType)
+            {
+                case PythonProcessType.BackgroundImage:
+                    _path = BackGroundImagePath;
+                    break;
+                case PythonProcessType.WeightedOutline:
+                    _path = WeightedOutlinePath;
+                    break;
+                case PythonProcessType.WeightedLevelSetOutline:
+                    _path = WeightedLevelSetOutlinePath;
+                    break;
+                case PythonProcessType.WeightedLevelSetOutlineIntertior:
+                    _path = WeightedLevelSetOutlineInteriorPath;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(processType), processType, null);
+            }
         }
 
         public void InitProcess(RenderTexture maskRenderTexture)
         {
             // 1) Prepare a GPU-side RenderTexture for your compute shader
-            _sim.compute.SetTexture(_sim.diffuseMapKernel, "BackgroundImage", maskRenderTexture);
-            _sim.compute.SetTexture(_sim.colourKernel, "BackgroundImage2", maskRenderTexture);
+            _sim.compute.SetBool("useBackGroundImage", false);
+            _sim.compute.SetBool("useBackgroundWeight", false);
+
+            _sim.compute.SetTexture(_sim.colourKernel, "BackGroundImage", maskRenderTexture);
+            _sim.compute.SetTexture(_sim.diffuseMapKernel, "BackGroundWeight", maskRenderTexture);
+
+            if (_processType == PythonProcessType.BackgroundImage)
+            {
+                _sim.compute.SetBool("useBackGroundImage", true);
+            }
+            else 
+            {
+                _sim.compute.SetBool("useBackgroundWeight", true);
+            }
+
 
             // 2) Launch Python once
             var psi = new ProcessStartInfo
@@ -115,7 +143,7 @@ namespace Assets.Scripts.Slime
                 //    Graphics.Blit(tex, maskRenderTexture);
                 //}
 
-                if(_currentFrame != null)
+                if (_currentFrame != null)
                 {
                     var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
                     tex.LoadImage(_currentFrame);
